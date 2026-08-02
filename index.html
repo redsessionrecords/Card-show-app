@@ -66,9 +66,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Sell List
     </button>
-    <button class="nav-btn" onclick="switchTab('import')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-      Import
+    <button class="nav-btn" onclick="switchTab('options')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Options
     </button>
   </nav>
 
@@ -124,7 +124,17 @@
       <div id="sell-list"></div>
     </div>
 
-    <div id="tab-import" class="tab-content">
+    <!-- RENAMED TO OPTIONS -->
+    <div id="tab-options" class="tab-content">
+      <div class="card">
+        <h2 style="margin-bottom:8px; font-size:18px;">Display Settings</h2>
+        <label>Currency Format</label>
+        <select id="pref-currency" onchange="updateCurrencyPref()">
+          <option value="shorthand">Shorthand (e.g. $15.5k)</option>
+          <option value="full">Full Number (e.g. $15,500.00)</option>
+        </select>
+      </div>
+
       <div class="card">
         <h2 style="margin-bottom:8px; font-size:18px;">Import Card Ladder CSV</h2>
         <p class="card-meta">Select your exported CSV. Data is saved locally to your device.</p>
@@ -132,6 +142,7 @@
         <button class="btn" onclick="processCSV()">Import Collection</button>
         <div id="import-status" style="margin-top:12px; font-size:14px; font-weight:700; color:var(--primary);"></div>
       </div>
+
       <div class="card">
         <h2 style="margin-bottom:8px; font-size:18px;">App Data</h2>
         <p class="card-meta">If you need to reset the app, you can delete the local database.</p>
@@ -145,6 +156,33 @@
     const DB_NAME = 'CardShowApp_v2';
     let db;
     let allCards = [];
+
+    // --- Format Helper ---
+    function formatMoney(value) {
+      if (value === undefined || value === null || isNaN(value)) return '--';
+      const pref = localStorage.getItem('currencyFormat') || 'shorthand';
+
+      if (pref === 'shorthand' && value >= 1000) {
+        // e.g. 15242 -> 15.242k, 15500 -> 15.5k
+        return '$' + parseFloat((value / 1000).toFixed(3)) + 'k';
+      } else {
+        // Full with commas, e.g. $15,500.00
+        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      }
+    }
+
+    function initSettings() {
+      const pref = localStorage.getItem('currencyFormat') || 'shorthand';
+      document.getElementById('pref-currency').value = pref;
+    }
+
+    function updateCurrencyPref() {
+      localStorage.setItem('currencyFormat', document.getElementById('pref-currency').value);
+      // Re-render UI to reflect changes immediately
+      renderCollection();
+      loadSellList();
+      updateCalc();
+    }
 
     const initDB = () => {
       return new Promise((resolve, reject) => {
@@ -226,13 +264,10 @@
       const fYear = document.getElementById('f-year').value.toLowerCase().trim();
       const fSort = document.getElementById('f-sort').value;
 
-      // FIX: Split search query into multiple words so "Ohtani Chrome" matches
       const searchTerms = fSearch.split(/\s+/).filter(term => term.length > 0);
 
       let filtered = allCards.filter(c => {
         const searchString = `${c.player} ${c.set} ${c.year} ${c.number}`.toLowerCase();
-
-        // Check if EVERY typed word exists somewhere in the card's string
         const matchesSearch = searchTerms.every(term => searchString.includes(term));
         const matchesYear = !fYear || c.year.toLowerCase().includes(fYear);
 
@@ -255,7 +290,7 @@
           <div class="card-row">
             <div>
               <div style="font-size:12px; color:var(--text-muted);">Current Value</div>
-              <div class="val-large">$${c.value.toFixed(2)}</div>
+              <div class="val-large">${formatMoney(c.value)}</div>
             </div>
             <button class="btn-small btn" onclick="loadIntoMathTab('${c.id}')">Sell Math</button>
           </div>
@@ -286,9 +321,9 @@
       const comp = parseFloat(document.getElementById('calc-comp').value) || 0;
       const offer = parseFloat(document.getElementById('calc-offer').value) || 0;
 
-      document.getElementById('calc-90').innerText = comp ? '$' + (comp * 0.9).toFixed(2) : '--';
-      document.getElementById('calc-80').innerText = comp ? '$' + (comp * 0.8).toFixed(2) : '--';
-      document.getElementById('calc-70').innerText = comp ? '$' + (comp * 0.7).toFixed(2) : '--';
+      document.getElementById('calc-90').innerText = comp ? formatMoney(comp * 0.9) : '--';
+      document.getElementById('calc-80').innerText = comp ? formatMoney(comp * 0.8) : '--';
+      document.getElementById('calc-70').innerText = comp ? formatMoney(comp * 0.7) : '--';
 
       if (comp > 0 && offer > 0) {
         document.getElementById('calc-pct').innerText = ((offer / comp) * 100).toFixed(1) + '%';
@@ -332,15 +367,15 @@
             <div class="card">
               <div style="font-weight:700; font-size:16px; margin-bottom:4px;">${item.title}</div>
               <div class="card-row" style="margin-top:8px; margin-bottom:0;">
-                <div><span class="card-meta">Sold For:</span> <span class="val-large" style="color:var(--primary);">$${item.salePrice.toFixed(2)}</span></div>
-                <div class="card-meta">Comp: $${item.comp.toFixed(2)} <br/>(${pct} of Comp)</div>
+                <div><span class="card-meta">Sold For:</span> <span class="val-large" style="color:var(--primary);">${formatMoney(item.salePrice)}</span></div>
+                <div class="card-meta">Comp: ${formatMoney(item.comp)} <br/>(${pct} of Comp)</div>
               </div>
             </div>
           `;
         }).join('');
 
         document.getElementById('sell-list').innerHTML = html || '<p style="text-align:center; color:var(--text-muted);">No cards sold yet.</p>';
-        document.getElementById('sell-total').innerText = `$${total.toFixed(2)}`;
+        document.getElementById('sell-total').innerText = formatMoney(total);
       };
     }
 
@@ -362,6 +397,7 @@
       };
     }
 
+    initSettings();
     initDB().then(() => {
       loadDatabaseView();
     });
