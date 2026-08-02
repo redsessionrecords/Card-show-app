@@ -10,6 +10,7 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <style>
     :root {
+      /* Default Theme (Classic Light) */
       --bg: #f7f6f2; --surface: #ffffff; --surface-alt: #f3f0ec;
       --text: #28251d; --text-muted: #7a7974; 
       --primary: #01696f; --primary-hover: #0c4e54;
@@ -19,11 +20,82 @@
       --success: #437a22;  
       --radius: 12px; --radius-sm: 8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
 
-    .top-nav { position: sticky; top: 0; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; z-index: 20; padding-top: env(safe-area-inset-top); }
-    .nav-btn { flex: 1; padding: 12px 0; border: none; background: none; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    /* --- LIGHT THEMES --- */
+    [data-theme="turf"] {
+      --bg: #f2f7f4; --surface: #ffffff; --surface-alt: #e6f0eb;
+      --text: #1a2b22; --text-muted: #5c7a68; --primary: #2d8659;
+      --primary-hover: #1e5c3d; --border: #cce0d6;
+    }
+    [data-theme="ocean"] {
+      --bg: #f0f4f8; --surface: #ffffff; --surface-alt: #e1eaf2;
+      --text: #1c2d3d; --text-muted: #6b8299; --primary: #1565c0;
+      --primary-hover: #0d47a1; --border: #cdd9e6;
+    }
+    [data-theme="ruby"] {
+      --bg: #fcfafb; --surface: #ffffff; --surface-alt: #f5eff1;
+      --text: #2b1c20; --text-muted: #8c7379; --primary: #c92a42;
+      --primary-hover: #9e1f32; --border: #e6d3d7;
+    }
+    [data-theme="gold"] {
+      --bg: #f9f6f0; --surface: #ffffff; --surface-alt: #f1ebd9;
+      --text: #332b22; --text-muted: #857560; --primary: #b8860b;
+      --primary-hover: #996b00; --border: #e0d5c1;
+    }
+    [data-theme="vintage"] {
+      --bg: #f4ecd8; --surface: #fdfaf3; --surface-alt: #ebdcc0;
+      --text: #3d2f2b; --text-muted: #87746d; --primary: #a73a3a;
+      --primary-hover: #822929; --border: #d9c8b3;
+    }
+    [data-theme="amethyst"] {
+      --bg: #f9f5ff; --surface: #ffffff; --surface-alt: #f0e6ff;
+      --text: #2a1c3d; --text-muted: #7d6b99; --primary: #7b2cbf;
+      --primary-hover: #5a1e8c; --border: #d9c2ff;
+    }
+
+    /* --- DARK THEMES --- */
+    [data-theme="dark"] {
+      --bg: #121212; --surface: #1e1e1e; --surface-alt: #2a2a2a;
+      --text: #e0e0e0; --text-muted: #a0a0a0; --primary: #4facfe;
+      --primary-hover: #3f8cb2; --border: #333333;
+      --danger: #ff6b6b; --warning: #fbd38d; --success: #68d391;
+    }
+    [data-theme="pitch-black"] {
+      --bg: #000000; --surface: #111111; --surface-alt: #222222;
+      --text: #ffffff; --text-muted: #aaaaaa; --primary: #bb86fc;
+      --primary-hover: #9965db; --border: #333333;
+      --danger: #ff6b6b; --warning: #fbd38d; --success: #68d391;
+    }
+    [data-theme="slate-copper"] {
+      --bg: #1c1f24; --surface: #272b33; --surface-alt: #323842;
+      --text: #f0f2f5; --text-muted: #9ba3af; --primary: #e67e22;
+      --primary-hover: #cc6c19; --border: #404752;
+      --danger: #f56565; --warning: #f6ad55; --success: #48bb78;
+    }
+    [data-theme="cyberpunk"] {
+      --bg: #0f0f1d; --surface: #1a1a2e; --surface-alt: #252542;
+      --text: #e0e0ff; --text-muted: #8f8fb5; --primary: #ff2a6d;
+      --primary-hover: #d11e55; --border: #3a3a5c;
+      --danger: #ff4d4d; --warning: #f9e076; --success: #05d9e8;
+    }
+    [data-theme="espresso"] {
+      --bg: #3e2723; --surface: #4e342e; --surface-alt: #5d4037;
+      --text: #efebe9; --text-muted: #bcaaa4; --primary: #d7ccc8;
+      --primary-hover: #bcaaa4; --border: #6d4c41;
+      --danger: #ff8a80; --warning: #ffb74d; --success: #81c784;
+    }
+    [data-theme="forest-night"] {
+      --bg: #0f1a15; --surface: #17261f; --surface-alt: #21362d;
+      --text: #e2f0e9; --text-muted: #8ca699; --primary: #4ade80;
+      --primary-hover: #38a169; --border: #2f4d40;
+      --danger: #fc8181; --warning: #f6e05e; --success: #68d391;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; transition: background 0.3s ease, color 0.3s ease; }
+
+    .top-nav { position: sticky; top: 0; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; z-index: 20; padding-top: env(safe-area-inset-top); transition: background 0.3s ease, border-color 0.3s ease; }
+    .nav-btn { flex: 1; padding: 12px 0; border: none; background: none; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.3s ease; }
     .nav-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 9px; }
     .nav-btn svg { width: 22px; height: 22px; }
 
@@ -31,30 +103,32 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background 0.3s ease, border-color 0.3s ease; }
     .card-title { font-weight: 700; font-size: 18px; margin-bottom: 2px; color: var(--primary); }
     .card-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
     .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .val-large { font-weight: 700; font-size: 18px; }
 
-    input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; background: var(--surface); margin-bottom: 12px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text); margin-bottom: 12px; transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
     label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
 
     .input-wrap { position: relative; margin-bottom: 12px; width: 100%; }
     .input-wrap input { margin-bottom: 0; padding-right: 36px; }
     .clear-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
 
-    .btn { display: inline-block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; text-align: center; cursor: pointer; text-decoration: none; }
+    .btn { display: inline-block; width: 100%; padding: 14px; background: var(--primary); color: #ffffff; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; text-align: center; cursor: pointer; text-decoration: none; transition: background 0.3s ease; }
     .btn-small { width: auto; padding: 8px 16px; font-size: 14px; cursor: pointer; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-    .btn-dark { background: #111; color: #fff; border: 1px solid #111; }
+
+    /* Inverted button that dynamically adapts to light/dark themes */
+    .btn-dark { background: var(--text); color: var(--bg); border: 1px solid var(--text); transition: background 0.3s ease, color 0.3s ease; }
 
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .filter-full { grid-column: 1 / -1; }
 
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .stat-box { background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); text-align: center; }
+    .stat-box { background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); text-align: center; transition: background 0.3s ease; }
     .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
     .stat-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
 
@@ -62,7 +136,7 @@
     .mini-comp-input { flex: 1; min-width: 60px; padding: 6px 8px; font-size: 13px; font-style: italic; color: var(--text-muted); margin-bottom: 0; text-align: center; }
     .mini-comps-label { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: -8px; margin-bottom: 4px; display: block; }
 
-    .counter-list-item { background: var(--surface-alt); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
+    .counter-list-item { background: var(--surface-alt); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease; }
     .counter-list-item .btn-small { padding: 6px 12px; font-size: 13px; }
   </style>
 </head>
@@ -110,14 +184,12 @@
         <label>Card Name / Description</label>
         <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
 
-        <!-- NEW WORKFLOW: Copy Name, then Open clean URL -->
         <div style="display: flex; gap: 8px; margin-bottom: 16px; margin-top: -4px;">
            <button id="btn-copy-name" onclick="copyCardName()" class="btn-small btn-outline" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm);">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
              <span id="copy-btn-text">1. Copy Name</span>
            </button>
 
-           <!-- Pure HTML anchor tag gives Universal Links the highest chance to work -->
            <a href="https://www.cardladder.com/" target="_blank" class="btn-small btn-dark" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm); text-decoration: none;">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
              2. Open App
@@ -180,6 +252,32 @@
 
     <!-- OPTIONS TAB -->
     <div id="tab-options" class="tab-content">
+
+      <!-- NEW: Theme Selector -->
+      <div class="card" style="border-color: var(--primary);">
+        <h2 style="margin-bottom:8px; font-size:18px; color: var(--primary);">App Theme</h2>
+        <label>Select a Color Palette</label>
+        <select id="pref-theme" onchange="updateTheme()">
+          <optgroup label="Light Themes">
+            <option value="default">Classic Light (Default)</option>
+            <option value="turf">Turf Green</option>
+            <option value="ocean">Ocean Blue</option>
+            <option value="ruby">Ruby Red</option>
+            <option value="gold">Cardboard Gold</option>
+            <option value="vintage">Vintage Baseball</option>
+            <option value="amethyst">Amethyst</option>
+          </optgroup>
+          <optgroup label="Dark Themes">
+            <option value="dark">Classic Dark</option>
+            <option value="pitch-black">Pitch Black (OLED)</option>
+            <option value="slate-copper">Slate & Copper</option>
+            <option value="cyberpunk">Cyberpunk Neon</option>
+            <option value="espresso">Espresso</option>
+            <option value="forest-night">Forest Night</option>
+          </optgroup>
+        </select>
+      </div>
+
       <div class="card">
         <h2 style="margin-bottom:8px; font-size:18px;">Comps & Calculator Settings</h2>
         <label>Number of Recent Sales to Average</label>
@@ -220,6 +318,24 @@
     let sellCards = []; 
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
     let editingSellId = null;
+
+    // --- NEW: Theme Management ---
+    function updateTheme() {
+        const theme = document.getElementById('pref-theme').value;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('appTheme', theme);
+    }
+
+    function initSettings() {
+      // Load saved theme and apply it immediately
+      const savedTheme = localStorage.getItem('appTheme') || 'default';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('pref-theme').value = savedTheme;
+
+      document.getElementById('pref-currency').value = localStorage.getItem('currencyFormat') || 'shorthand';
+      document.getElementById('pref-comp-count').value = localStorage.getItem('compCount') || '3';
+      renderMiniComps();
+    }
 
     function copyCardName() {
         const descStr = document.getElementById('calc-desc').value.trim();
@@ -273,12 +389,6 @@
         });
         toggle();
       });
-    }
-
-    function initSettings() {
-      document.getElementById('pref-currency').value = localStorage.getItem('currencyFormat') || 'shorthand';
-      document.getElementById('pref-comp-count').value = localStorage.getItem('compCount') || '3';
-      renderMiniComps();
     }
 
     function updateCurrencyPref() {
