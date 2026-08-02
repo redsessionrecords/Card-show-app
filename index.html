@@ -19,15 +19,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
 
-    /* Navigation - Moved to Top */
-    .top-nav { 
-      position: sticky; top: 0; left: 0; right: 0; 
-      background: var(--surface); 
-      border-bottom: 1px solid var(--border); 
-      display: flex; 
-      z-index: 20; 
-      padding-top: env(safe-area-inset-top); /* Avoids iPhone notch/Dynamic Island */
-    }
+    .top-nav { position: sticky; top: 0; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; z-index: 20; padding-top: env(safe-area-inset-top); }
     .nav-btn { flex: 1; padding: 12px 0; border: none; background: none; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .nav-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 9px; }
     .nav-btn svg { width: 22px; height: 22px; }
@@ -36,7 +28,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* UI Elements */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .card-title { font-weight: 700; font-size: 18px; margin-bottom: 2px; color: var(--primary); }
     .card-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
@@ -51,11 +42,9 @@
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
 
-    /* Filters */
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .filter-full { grid-column: 1 / -1; }
 
-    /* Stats */
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .stat-box { background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); text-align: center; }
     .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
@@ -64,7 +53,6 @@
 </head>
 <body>
 
-  <!-- Navigation (Moved to top to avoid iOS home bar) -->
   <nav class="top-nav">
     <button class="nav-btn active" onclick="switchTab('db')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>
@@ -86,10 +74,8 @@
 
   <main class="content">
 
-    <!-- DATABASE TAB -->
     <div id="tab-db" class="tab-content active">
       <div class="filter-grid">
-        <!-- Unified search fixes the Shohei Ohtani filtering issue -->
         <input type="text" id="f-search" class="filter-full" placeholder="Search Player, Set, or Card Name...">
         <input type="text" id="f-year" placeholder="Year">
         <select id="f-sort">
@@ -102,14 +88,10 @@
       <div id="db-list"></div>
     </div>
 
-    <!-- CALCULATOR TAB (Now handles Database Sales too) -->
     <div id="tab-calc" class="tab-content">
       <div class="card" id="calc-card">
-
-        <!-- Added missing input for Card Details -->
         <label>Card Name / Description</label>
         <input type="text" id="calc-desc" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
-
         <label>Average Comp ($)</label>
         <input type="number" id="calc-comp" placeholder="e.g. 100">
 
@@ -130,7 +112,6 @@
       </div>
     </div>
 
-    <!-- SELL LIST TAB -->
     <div id="tab-sell" class="tab-content">
       <div class="card" style="text-align: center; border-color: var(--primary);">
         <div class="stat-label">Show Running Total</div>
@@ -143,7 +124,6 @@
       <div id="sell-list"></div>
     </div>
 
-    <!-- SETTINGS / IMPORT TAB -->
     <div id="tab-import" class="tab-content">
       <div class="card">
         <h2 style="margin-bottom:8px; font-size:18px;">Import Card Ladder CSV</h2>
@@ -162,7 +142,6 @@
   </main>
 
   <script>
-    // --- IndexedDB Setup ---
     const DB_NAME = 'CardShowApp_v2';
     let db;
     let allCards = [];
@@ -182,7 +161,6 @@
 
     const getStore = (storeName, mode) => db.transaction(storeName, mode).objectStore(storeName);
 
-    // --- UI Logic ---
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -193,7 +171,6 @@
       if (tabId === 'sell') loadSellList();
     }
 
-    // --- Import Logic ---
     function processCSV() {
       const file = document.getElementById('csv-file').files[0];
       if (!file) return alert("Select a file first.");
@@ -205,7 +182,6 @@
         skipEmptyLines: true,
         complete: (results) => {
           const cards = results.data.map((r, i) => {
-            // Robust column mapping to catch variations in CSV headers
             const pName = r['Player'] || r['Players'] || r['Player Name'] || r['Subject'] || '';
             const sName = r['Set'] || r['Brand'] || '';
             const cNum = r['Number'] || r['Card Number'] || '';
@@ -236,7 +212,6 @@
       });
     }
 
-    // --- Database View ---
     function loadDatabaseView() {
       const store = getStore('cards', 'readonly');
       const req = store.getAll();
@@ -247,15 +222,20 @@
     }
 
     function renderCollection() {
-      const fSearch = document.getElementById('f-search').value.toLowerCase();
-      const fYear = document.getElementById('f-year').value.toLowerCase();
+      const fSearch = document.getElementById('f-search').value.toLowerCase().trim();
+      const fYear = document.getElementById('f-year').value.toLowerCase().trim();
       const fSort = document.getElementById('f-sort').value;
 
+      // FIX: Split search query into multiple words so "Ohtani Chrome" matches
+      const searchTerms = fSearch.split(/\s+/).filter(term => term.length > 0);
+
       let filtered = allCards.filter(c => {
-        // Universal search fixes the "Shohei Ohtani" missed filter issue
-        const searchStr = `${c.player} ${c.set} ${c.year} ${c.number}`.toLowerCase();
-        const matchesSearch = !fSearch || searchStr.includes(fSearch);
+        const searchString = `${c.player} ${c.set} ${c.year} ${c.number}`.toLowerCase();
+
+        // Check if EVERY typed word exists somewhere in the card's string
+        const matchesSearch = searchTerms.every(term => searchString.includes(term));
         const matchesYear = !fYear || c.year.toLowerCase().includes(fYear);
+
         return matchesSearch && matchesYear;
       });
 
@@ -270,7 +250,6 @@
 
       const html = filtered.slice(0, 100).map(c => `
         <div class="card">
-          <!-- Player name made highly visible -->
           <div class="card-title">${c.player}</div>
           <div class="card-meta">${c.year} ${c.set} ${c.number ? '#'+c.number : ''} <br/> <strong>${c.condition}</strong></div>
           <div class="card-row">
@@ -278,7 +257,6 @@
               <div style="font-size:12px; color:var(--text-muted);">Current Value</div>
               <div class="val-large">$${c.value.toFixed(2)}</div>
             </div>
-            <!-- Sell button now routes to Math tab -->
             <button class="btn-small btn" onclick="loadIntoMathTab('${c.id}')">Sell Math</button>
           </div>
         </div>
@@ -291,18 +269,12 @@
       document.getElementById(id).addEventListener('input', renderCollection);
     });
 
-    // --- Calculator & Database Sell Flow ---
-
-    // This connects the Database "Sell Math" button to the Calculator
     function loadIntoMathTab(id) {
       const c = allCards.find(card => card.id === id);
       if(!c) return;
 
-      // Populate Card Details missing from previous version
       document.getElementById('calc-desc').value = `${c.year} ${c.set} ${c.player} ${c.number ? '#'+c.number : ''}`;
-      // Populate Comp Value
       document.getElementById('calc-comp').value = c.value;
-      // Clear previous offer
       document.getElementById('calc-offer').value = '';
 
       updateCalc();
@@ -343,13 +315,10 @@
         document.getElementById('calc-desc').value = '';
         document.getElementById('calc-comp').value = '';
         updateCalc();
-
-        // Auto-switch to Sell List to see the addition
         switchTab('sell');
       };
     }
 
-    // --- Sell List Logic ---
     function loadSellList() {
       const req = getStore('sellList', 'readonly').getAll();
       req.onsuccess = () => {
@@ -393,7 +362,6 @@
       };
     }
 
-    // --- Startup ---
     initDB().then(() => {
       loadDatabaseView();
     });
