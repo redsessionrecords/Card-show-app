@@ -40,15 +40,15 @@
     input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; background: var(--surface); margin-bottom: 12px; }
     label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
 
-    /* Input Wrapper for X Button */
     .input-wrap { position: relative; margin-bottom: 12px; width: 100%; }
     .input-wrap input { margin-bottom: 0; padding-right: 36px; }
     .clear-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
 
-    .btn { display: inline-block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; text-align: center; cursor: pointer; }
+    .btn { display: inline-block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; text-align: center; cursor: pointer; text-decoration: none; }
     .btn-small { width: auto; padding: 8px 16px; font-size: 14px; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-dark { background: #111; color: #fff; } /* specific for Card Ladder button */
 
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .filter-full { grid-column: 1 / -1; }
@@ -62,7 +62,6 @@
     .mini-comp-input { flex: 1; min-width: 60px; padding: 6px 8px; font-size: 13px; font-style: italic; color: var(--text-muted); margin-bottom: 0; text-align: center; }
     .mini-comps-label { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: -8px; margin-bottom: 4px; display: block; }
 
-    /* Counter Offers display */
     .counter-list-item { background: var(--surface-alt); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
     .counter-list-item .btn-small { padding: 6px 12px; font-size: 13px; }
   </style>
@@ -74,7 +73,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>
       Database
     </button>
-    <!-- Renamed from Math to Comps -->
     <button class="nav-btn" onclick="switchTab('calc')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M16 14v4M12 14v4M8 14v4M16 10h.01M12 10h.01M8 10h.01"/></svg>
       Comps
@@ -91,7 +89,6 @@
 
   <main class="content">
 
-    <!-- DATABASE TAB -->
     <div id="tab-db" class="tab-content active">
       <div class="filter-grid">
         <input type="text" id="f-search" class="filter-full with-clear" placeholder="Search Player, Set, or Card Name...">
@@ -106,19 +103,24 @@
       <div id="db-list"></div>
     </div>
 
-    <!-- COMPS / CALC TAB -->
+    <!-- COMPS TAB -->
     <div id="tab-calc" class="tab-content">
       <div class="card" id="calc-card">
-        <label>Card Name / Description</label>
-        <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+           <label style="margin: 0;">Card Name / Description</label>
+           <!-- NEW: Card Ladder Web Search Button -->
+           <a href="https://www.cardladder.com/sales" target="_blank" id="btn-cl-search" class="btn-small btn-dark" style="padding: 4px 8px; font-size: 11px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+             Search Card Ladder
+           </a>
+        </div>
+        <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani" oninput="updateCLSearchLink()">
 
-        <label>Average Comp ($)</label>
+        <label style="margin-top: 12px;">Average Comp ($)</label>
         <input type="number" id="calc-comp" class="with-clear" placeholder="e.g. 100" oninput="clearMiniComps()">
 
         <span class="mini-comps-label" id="mini-comps-label">Enter recent sales to auto-average:</span>
-        <div class="mini-comps-container" id="mini-comps-container">
-          <!-- JS injects inputs here -->
-        </div>
+        <div class="mini-comps-container" id="mini-comps-container"></div>
 
         <div class="stats-grid" style="margin-top: 4px;">
           <div class="stat-box"><div class="stat-label">90% Buy</div><div class="stat-val" id="calc-90">--</div></div>
@@ -134,12 +136,9 @@
           <span class="val-large" id="calc-pct" style="color: var(--primary);">--</span>
         </div>
 
-        <!-- NEW: Counter-Offer Guide -->
         <div id="counter-guide" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--surface-alt);">
           <label style="margin-bottom: 8px;">Counter-Offer Guide</label>
-          <div id="counter-list">
-            <!-- JS injects counter increments here -->
-          </div>
+          <div id="counter-list"></div>
         </div>
 
         <button class="btn" style="margin-top: 16px;" id="math-save-btn" onclick="saveToSellList()">Add to Sell List</button>
@@ -211,8 +210,6 @@
     let db;
     let allCards = [];
     let sellCards = []; 
-
-    // Track math state and editing
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
     let editingSellId = null;
 
@@ -234,16 +231,28 @@
       return 'var(--danger)';
     }
 
-    // Wrap inputs with a native-feeling clear button
+    // Dynamic Card Ladder Search URL builder
+    function updateCLSearchLink() {
+      const descStr = document.getElementById('calc-desc').value.trim();
+      const btn = document.getElementById('btn-cl-search');
+
+      if (descStr.length > 0) {
+        // Construct the query string Card Ladder uses for its sales search
+        const query = encodeURIComponent(descStr);
+        btn.href = `https://www.cardladder.com/sales?search=${query}`;
+      } else {
+        // Fallback to base sales page if empty
+        btn.href = `https://www.cardladder.com/sales`;
+      }
+    }
+
     function attachClearButtons() {
       document.querySelectorAll('input.with-clear').forEach(input => {
         if (input.parentNode.classList.contains('input-wrap')) return;
-
         const wrapper = document.createElement('div');
         wrapper.className = 'input-wrap';
         input.parentNode.insertBefore(wrapper, input);
         wrapper.appendChild(input);
-
         const btn = document.createElement('button');
         btn.className = 'clear-btn';
         btn.innerHTML = '&times;';
@@ -265,6 +274,7 @@
       document.getElementById('pref-currency').value = localStorage.getItem('currencyFormat') || 'shorthand';
       document.getElementById('pref-comp-count').value = localStorage.getItem('compCount') || '3';
       renderMiniComps();
+      updateCLSearchLink(); // initialize link state
     }
 
     function updateCurrencyPref() {
@@ -336,7 +346,6 @@
     };
     const getStore = (storeName, mode) => db.transaction(storeName, mode).objectStore(storeName);
 
-    // --- Tabs ---
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -352,7 +361,6 @@
       }
     }
 
-    // --- CSV Import ---
     function processCSV() {
       const file = document.getElementById('csv-file').files[0];
       if (!file) return alert("Select a file first.");
@@ -383,7 +391,6 @@
       });
     }
 
-    // --- Database View ---
     function loadDatabaseView() {
       const req = getStore('cards', 'readonly').getAll();
       req.onsuccess = () => { allCards = req.result; renderCollection(); };
@@ -420,7 +427,6 @@
               <div style="font-size:12px; color:var(--text-muted);">Current Value</div>
               <div class="val-large">${formatMoney(c.value)}</div>
             </div>
-            <!-- Updated button text -->
             <button class="btn-small btn" onclick="loadIntoMathTab('${c.id}')">Run Comps</button>
           </div>
         </div>
@@ -477,9 +483,8 @@
         pctEl.innerText = pctVal.toFixed(1) + '%';
         pctEl.style.color = getColorForPct(pctVal);
 
-        // Generate Counter Offers in 5% increments
         let nextPct = Math.ceil(pctVal / 5) * 5;
-        if (nextPct === Math.round(pctVal)) nextPct += 5; // Force it to jump to the next actual bracket
+        if (nextPct === Math.round(pctVal)) nextPct += 5;
 
         let counterHtml = '';
         for(let i=0; i<3; i++) {
@@ -509,12 +514,11 @@
     document.getElementById('calc-offer').addEventListener('input', updateCalc);
     document.getElementById('calc-comp').addEventListener('input', updateCalc);
 
-    // One-click apply and save from Counter Guide
     function applyAndSaveCounter(price) {
       const offerInput = document.getElementById('calc-offer');
       offerInput.value = price;
-      offerInput.dispatchEvent(new Event('input')); // Re-run math/toggles
-      saveToSellList(); // Fire off the save
+      offerInput.dispatchEvent(new Event('input')); 
+      saveToSellList(); 
     }
 
     function saveToSellList() {
