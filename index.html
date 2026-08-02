@@ -14,9 +14,9 @@
       --text: #28251d; --text-muted: #7a7974; 
       --primary: #01696f; --primary-hover: #0c4e54;
       --border: #d4d1ca; 
-      --danger: #a12c7b;   /* Red / <80% */
-      --warning: #da7101;  /* Yellow/Orange / 80-89% */
-      --success: #437a22;  /* Green / 90%+ */
+      --danger: #a12c7b;   
+      --warning: #da7101;  
+      --success: #437a22;  
       --radius: 12px; --radius-sm: 8px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -48,7 +48,7 @@
     .btn-small { width: auto; padding: 8px 16px; font-size: 14px; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-    .btn-dark { background: #111; color: #fff; } /* specific for Card Ladder button */
+    .btn-dark { background: #111; color: #fff; }
 
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .filter-full { grid-column: 1 / -1; }
@@ -108,13 +108,17 @@
       <div class="card" id="calc-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
            <label style="margin: 0;">Card Name / Description</label>
-           <!-- NEW: Card Ladder Web Search Button -->
-           <a href="https://www.cardladder.com/sales" target="_blank" id="btn-cl-search" class="btn-small btn-dark" style="padding: 4px 8px; font-size: 11px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+           <!-- Fallback button: open the home screen instead of the 404 sales page.
+                If they have the app and universal links are working, this will prompt to open the app.
+                If it fails and opens in Safari, it drops them on the clean homepage where they can log in. -->
+           <a href="https://www.cardladder.com/" target="_blank" class="btn-small btn-dark" style="padding: 4px 8px; font-size: 11px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-             Search Card Ladder
+             Open Card Ladder
            </a>
         </div>
-        <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani" oninput="updateCLSearchLink()">
+
+        <!-- We use an ordinary input field. Copying the text is easy from here if the user needs to paste it. -->
+        <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
 
         <label style="margin-top: 12px;">Average Comp ($)</label>
         <input type="number" id="calc-comp" class="with-clear" placeholder="e.g. 100" oninput="clearMiniComps()">
@@ -213,7 +217,6 @@
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
     let editingSellId = null;
 
-    // --- Helpers ---
     function formatMoney(value) {
       if (value === undefined || value === null || isNaN(value)) return '--';
       const pref = localStorage.getItem('currencyFormat') || 'shorthand';
@@ -229,21 +232,6 @@
       if (pctVal >= 90) return 'var(--success)';
       if (pctVal >= 80) return 'var(--warning)';
       return 'var(--danger)';
-    }
-
-    // Dynamic Card Ladder Search URL builder
-    function updateCLSearchLink() {
-      const descStr = document.getElementById('calc-desc').value.trim();
-      const btn = document.getElementById('btn-cl-search');
-
-      if (descStr.length > 0) {
-        // Construct the query string Card Ladder uses for its sales search
-        const query = encodeURIComponent(descStr);
-        btn.href = `https://www.cardladder.com/sales?search=${query}`;
-      } else {
-        // Fallback to base sales page if empty
-        btn.href = `https://www.cardladder.com/sales`;
-      }
     }
 
     function attachClearButtons() {
@@ -274,7 +262,6 @@
       document.getElementById('pref-currency').value = localStorage.getItem('currencyFormat') || 'shorthand';
       document.getElementById('pref-comp-count').value = localStorage.getItem('compCount') || '3';
       renderMiniComps();
-      updateCLSearchLink(); // initialize link state
     }
 
     function updateCurrencyPref() {
@@ -331,7 +318,6 @@
       });
     }
 
-    // --- DB Setup ---
     const initDB = () => {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, 1);
@@ -439,7 +425,6 @@
       document.getElementById(id).addEventListener('input', renderCollection);
     });
 
-    // --- Comps / Math Tab ---
     function loadIntoMathTab(id) {
       const c = allCards.find(card => card.id === id);
       if(!c) return;
@@ -566,7 +551,6 @@
       };
     }
 
-    // --- Sell List ---
     function loadSellList() {
       const req = getStore('sellList', 'readonly').getAll();
       req.onsuccess = () => {
@@ -692,7 +676,6 @@
       };
     }
 
-    // --- Init ---
     initSettings();
     attachClearButtons();
     initDB().then(() => loadDatabaseView());
