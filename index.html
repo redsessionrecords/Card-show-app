@@ -90,11 +90,6 @@
   <main class="content">
 
     <div id="tab-db" class="tab-content active">
-      <!-- Added a quick tip warning for users running inside Github app -->
-      <div id="ios-browser-warning" style="display:none; background: var(--warning); color: #fff; padding: 12px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px;">
-        <strong>Notice:</strong> You are viewing this inside an app browser. Apple Sign-In and App-Launching will fail here. Please open this page in <strong>native Safari</strong> and "Add to Home Screen".
-      </div>
-
       <div class="filter-grid">
         <input type="text" id="f-search" class="filter-full with-clear" placeholder="Search Player, Set, or Card Name...">
         <input type="text" id="f-year" class="with-clear" placeholder="Year">
@@ -115,16 +110,18 @@
         <label>Card Name / Description</label>
         <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
 
-        <!-- NEW: App Launching / Copy Link Controls -->
+        <!-- NEW WORKFLOW: Copy Name, then Open clean URL -->
         <div style="display: flex; gap: 8px; margin-bottom: 16px; margin-top: -4px;">
-           <button onclick="tryOpenCardLadderApp()" class="btn-small btn-dark" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm);">
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-             Open CL App
-           </button>
-           <button onclick="copyCardLadderSearchLink()" class="btn-small btn-outline" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm);">
+           <button id="btn-copy-name" onclick="copyCardName()" class="btn-small btn-outline" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm);">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-             Copy Link
+             <span id="copy-btn-text">1. Copy Name</span>
            </button>
+
+           <!-- Pure HTML anchor tag gives Universal Links the highest chance to work -->
+           <a href="https://www.cardladder.com/" target="_blank" class="btn-small btn-dark" style="flex: 1; padding: 10px 4px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm); text-decoration: none;">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+             2. Open App
+           </a>
         </div>
 
         <label style="margin-top: 12px;">Average Comp ($)</label>
@@ -224,42 +221,16 @@
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
     let editingSellId = null;
 
-    // Check if we are running in an in-app browser (like github app, instagram, etc)
-    // If we are, display a warning because Apple Sign-In and Universal Links will break.
-    function checkBrowserEnvironment() {
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        // Basic check for common in-app browser footprints when NOT standalone
-        if (!isStandalone && (ua.includes('FBAV') || ua.includes('Instagram') || ua.includes('Twitter') || ua.includes('GitHub'))) {
-            document.getElementById('ios-browser-warning').style.display = 'block';
-        }
-    }
-
-    function tryOpenCardLadderApp() {
+    function copyCardName() {
         const descStr = document.getElementById('calc-desc').value.trim();
-        let url = "https://www.cardladder.com/sales";
-        if(descStr) url += "?search=" + encodeURIComponent(descStr);
+        if (!descStr) return;
 
-        // Attempt 1: Try an undocumented custom scheme. If the app registered it, it'll snap open.
-        window.location.href = "cardladder://";
-
-        // Attempt 2: Fallback to the universal link.
-        // We use window.open to pop the link. NATIVE Safari will usually intercept this
-        // and open the app. IN-APP browsers will just open another tab and trap you.
-        setTimeout(() => {
-            window.open(url, '_blank');
-        }, 500);
-    }
-
-    function copyCardLadderSearchLink() {
-        const descStr = document.getElementById('calc-desc').value.trim();
-        let url = "https://www.cardladder.com/sales";
-        if(descStr) url += "?search=" + encodeURIComponent(descStr);
-
-        navigator.clipboard.writeText(url).then(() => {
-            alert("Link copied! Open your native Card Ladder app or Safari and paste it into the browser bar.");
+        navigator.clipboard.writeText(descStr).then(() => {
+            const btnText = document.getElementById('copy-btn-text');
+            btnText.innerText = "Copied!";
+            setTimeout(() => { btnText.innerText = "1. Copy Name"; }, 2000);
         }).catch(() => {
-            alert("Copy failed. Please manually copy the Card Name.");
+            alert("Copy failed.");
         });
     }
 
@@ -722,7 +693,6 @@
       };
     }
 
-    checkBrowserEnvironment();
     initSettings();
     attachClearButtons();
     initDB().then(() => loadDatabaseView());
