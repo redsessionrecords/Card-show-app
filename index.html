@@ -13,7 +13,10 @@
       --bg: #f7f6f2; --surface: #ffffff; --surface-alt: #f3f0ec;
       --text: #28251d; --text-muted: #7a7974; 
       --primary: #01696f; --primary-hover: #0c4e54;
-      --border: #d4d1ca; --danger: #a12c7b;
+      --border: #d4d1ca; 
+      --danger: #a12c7b;   /* Red / <80% */
+      --warning: #da7101;  /* Yellow/Orange / 80-89% */
+      --success: #437a22;  /* Green / 90%+ */
       --radius: 12px; --radius-sm: 8px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -37,6 +40,11 @@
     input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; background: var(--surface); margin-bottom: 12px; }
     label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
 
+    /* Input Wrapper for X Button */
+    .input-wrap { position: relative; margin-bottom: 12px; width: 100%; }
+    .input-wrap input { margin-bottom: 0; padding-right: 36px; }
+    .clear-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
+
     .btn { display: inline-block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; text-align: center; cursor: pointer; }
     .btn-small { width: auto; padding: 8px 16px; font-size: 14px; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
@@ -50,7 +58,6 @@
     .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
     .stat-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
 
-    /* New styles for small individual comps */
     .mini-comps-container { display: flex; gap: 6px; margin-top: -8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
     .mini-comp-input { flex: 1; min-width: 60px; padding: 6px 8px; font-size: 13px; font-style: italic; color: var(--text-muted); margin-bottom: 0; text-align: center; }
     .mini-comps-label { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: -8px; margin-bottom: 4px; display: block; }
@@ -79,10 +86,11 @@
 
   <main class="content">
 
+    <!-- DATABASE TAB -->
     <div id="tab-db" class="tab-content active">
       <div class="filter-grid">
-        <input type="text" id="f-search" class="filter-full" placeholder="Search Player, Set, or Card Name...">
-        <input type="text" id="f-year" placeholder="Year">
+        <input type="text" id="f-search" class="filter-full with-clear" placeholder="Search Player, Set, or Card Name...">
+        <input type="text" id="f-year" class="with-clear" placeholder="Year">
         <select id="f-sort">
           <option value="val-desc">Value: High to Low</option>
           <option value="val-asc">Value: Low to High</option>
@@ -93,13 +101,14 @@
       <div id="db-list"></div>
     </div>
 
+    <!-- MATH / CALC TAB -->
     <div id="tab-calc" class="tab-content">
       <div class="card" id="calc-card">
         <label>Card Name / Description</label>
-        <input type="text" id="calc-desc" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
+        <input type="text" id="calc-desc" class="with-clear" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
 
         <label>Average Comp ($)</label>
-        <input type="number" id="calc-comp" placeholder="e.g. 100" oninput="clearMiniComps()">
+        <input type="number" id="calc-comp" class="with-clear" placeholder="e.g. 100" oninput="clearMiniComps()">
 
         <span class="mini-comps-label" id="mini-comps-label">Enter recent sales to auto-average:</span>
         <div class="mini-comps-container" id="mini-comps-container">
@@ -113,32 +122,46 @@
         </div>
 
         <label>Dealer Offer ($)</label>
-        <input type="number" id="calc-offer" placeholder="e.g. 85">
+        <input type="number" id="calc-offer" class="with-clear" placeholder="e.g. 85">
 
         <div class="card-row" style="margin: 16px 0;">
           <span style="font-weight: 700;">Offer % of Comp:</span>
           <span class="val-large" id="calc-pct" style="color: var(--primary);">--</span>
         </div>
-        <button class="btn" onclick="addManualToSellList()">Add to Sell List</button>
+        <button class="btn" id="math-save-btn" onclick="saveToSellList()">Add to Sell List</button>
       </div>
     </div>
 
+    <!-- SELL LIST TAB -->
     <div id="tab-sell" class="tab-content">
       <div class="card" style="text-align: center; border-color: var(--primary);">
         <div class="stat-label">Show Running Total</div>
         <div class="stat-val" style="font-size: 32px; color: var(--primary);" id="sell-total">$0.00</div>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center;">
-        <h3 style="font-size:16px;">Sold Cards</h3>
+
+      <!-- New consistent filtering for Sell List -->
+      <div class="filter-grid">
+        <input type="text" id="s-search" class="filter-full with-clear" placeholder="Search Sold Cards...">
+        <input type="text" id="s-year" class="with-clear" placeholder="Year">
+        <select id="s-sort">
+          <option value="time-desc">Most Recent First</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="name-asc">Player: A to Z</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px; margin-top:12px; align-items: center;">
+        <h3 style="font-size:16px;" id="sell-count">Sold Cards</h3>
         <button class="btn-small btn-danger" onclick="clearSellList()">Clear List</button>
       </div>
       <div id="sell-list"></div>
     </div>
 
+    <!-- OPTIONS TAB -->
     <div id="tab-options" class="tab-content">
       <div class="card">
         <h2 style="margin-bottom:8px; font-size:18px;">Math & Calculator Settings</h2>
-
         <label>Number of Recent Sales to Average</label>
         <select id="pref-comp-count" onchange="updateCompCountPref()">
           <option value="0">Hide recent sales boxes</option>
@@ -174,17 +197,55 @@
     const DB_NAME = 'CardShowApp_v2';
     let db;
     let allCards = [];
+    let sellCards = []; // Cache for filtering sell list
 
-    // --- Format & Settings Helper ---
+    // Track math state and editing
+    let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
+    let editingSellId = null;
+
+    // --- Helpers ---
     function formatMoney(value) {
       if (value === undefined || value === null || isNaN(value)) return '--';
       const pref = localStorage.getItem('currencyFormat') || 'shorthand';
-
       if (pref === 'shorthand' && value >= 1000) {
         return '$' + parseFloat((value / 1000).toFixed(3)) + 'k';
       } else {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
       }
+    }
+
+    function getColorForPct(pctVal) {
+      if (isNaN(pctVal)) return 'var(--text-muted)';
+      if (pctVal >= 90) return 'var(--success)';
+      if (pctVal >= 80) return 'var(--warning)';
+      return 'var(--danger)';
+    }
+
+    // Wrap inputs with a native-feeling clear button
+    function attachClearButtons() {
+      document.querySelectorAll('input.with-clear').forEach(input => {
+        if (input.parentNode.classList.contains('input-wrap')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-wrap';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const btn = document.createElement('button');
+        btn.className = 'clear-btn';
+        btn.innerHTML = '&times;';
+        btn.type = 'button';
+        wrapper.appendChild(btn);
+
+        const toggle = () => btn.style.display = input.value ? 'flex' : 'none';
+        input.addEventListener('input', toggle);
+        btn.addEventListener('click', () => {
+          input.value = '';
+          toggle();
+          input.dispatchEvent(new Event('input')); // trigger filters/math
+        });
+        toggle();
+      });
     }
 
     function initSettings() {
@@ -196,7 +257,7 @@
     function updateCurrencyPref() {
       localStorage.setItem('currencyFormat', document.getElementById('pref-currency').value);
       renderCollection();
-      loadSellList();
+      renderSellListUI();
       updateCalc();
     }
 
@@ -205,7 +266,6 @@
       renderMiniComps();
     }
 
-    // --- Mini Comps Auto-Averaging ---
     function renderMiniComps() {
       const count = parseInt(localStorage.getItem('compCount') || '3');
       const container = document.getElementById('mini-comps-container');
@@ -221,33 +281,30 @@
       label.style.display = 'block';
       let html = '';
       for (let i = 1; i <= count; i++) {
-        html += `<input type="number" class="mini-comp-input" placeholder="Sale ${i}" oninput="calculateMiniComps()">`;
+        html += `<input type="number" class="mini-comp-input with-clear" placeholder="Sale ${i}" oninput="calculateMiniComps()">`;
       }
       container.innerHTML = html;
+      attachClearButtons(); // Attach clear buttons to dynamic inputs
     }
 
     function calculateMiniComps() {
-      let sum = 0;
-      let count = 0;
+      let sum = 0; let count = 0;
       document.querySelectorAll('.mini-comp-input').forEach(input => {
         const val = parseFloat(input.value);
-        if (!isNaN(val) && val > 0) {
-          sum += val;
-          count++;
-        }
+        if (!isNaN(val) && val > 0) { sum += val; count++; }
       });
-
       if (count > 0) {
         const avg = (sum / count).toFixed(2);
         document.getElementById('calc-comp').value = avg;
-        updateCalc();
+        document.getElementById('calc-comp').dispatchEvent(new Event('input'));
       }
     }
 
     function clearMiniComps() {
-      // If user types directly into Main Average Comp, clear out the mini inputs so they don't get confused
-      document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
-      updateCalc();
+      document.querySelectorAll('.mini-comp-input').forEach(input => {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+      });
     }
 
     // --- DB Setup ---
@@ -263,9 +320,9 @@
         req.onerror = (e) => reject(e);
       });
     };
-
     const getStore = (storeName, mode) => db.transaction(storeName, mode).objectStore(storeName);
 
+    // --- Tabs ---
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -274,15 +331,21 @@
 
       if (tabId === 'db') loadDatabaseView();
       if (tabId === 'sell') loadSellList();
+
+      // Reset editing state if leaving math tab
+      if (tabId !== 'calc') {
+         editingSellId = null;
+         document.getElementById('math-save-btn').innerText = "Add to Sell List";
+      }
     }
 
+    // --- CSV Import ---
     function processCSV() {
       const file = document.getElementById('csv-file').files[0];
       if (!file) return alert("Select a file first.");
       document.getElementById('import-status').innerText = "Parsing...";
       Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
+        header: true, skipEmptyLines: true,
         complete: (results) => {
           const cards = results.data.map((r, i) => {
             return {
@@ -296,7 +359,6 @@
               investment: parseFloat((r['Investment'] || '0').replace(/[^0-9.-]+/g,""))
             };
           }).filter(c => c.player || c.set); 
-
           const store = getStore('cards', 'readwrite');
           store.clear(); 
           cards.forEach(c => store.put(c));
@@ -308,9 +370,9 @@
       });
     }
 
+    // --- Database View ---
     function loadDatabaseView() {
-      const store = getStore('cards', 'readonly');
-      const req = store.getAll();
+      const req = getStore('cards', 'readonly').getAll();
       req.onsuccess = () => { allCards = req.result; renderCollection(); };
     }
 
@@ -357,18 +419,30 @@
       document.getElementById(id).addEventListener('input', renderCollection);
     });
 
+    // --- Math Tab ---
     function loadIntoMathTab(id) {
       const c = allCards.find(card => card.id === id);
       if(!c) return;
 
-      document.getElementById('calc-desc').value = `${c.year} ${c.set} ${c.player} ${c.number ? '#'+c.number : ''}`;
-      document.getElementById('calc-comp').value = c.value;
-      document.getElementById('calc-offer').value = '';
+      // Store structured data globally
+      currentMathCard = { player: c.player, year: c.year, set: c.set, number: c.number, condition: c.condition };
 
-      // Clear mini comps since we pulled a pre-averaged value from the DB
-      document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
+      const inputDesc = document.getElementById('calc-desc');
+      inputDesc.value = `${c.year} ${c.set} ${c.player} ${c.number ? '#'+c.number : ''}`.trim();
+      inputDesc.dispatchEvent(new Event('input')); // trigger 'x' toggle
 
-      updateCalc();
+      const inputComp = document.getElementById('calc-comp');
+      inputComp.value = c.value;
+      inputComp.dispatchEvent(new Event('input'));
+
+      const inputOffer = document.getElementById('calc-offer');
+      inputOffer.value = '';
+      inputOffer.dispatchEvent(new Event('input'));
+
+      clearMiniComps();
+      editingSellId = null;
+      document.getElementById('math-save-btn').innerText = "Add to Sell List";
+
       switchTab('calc');
       window.scrollTo(0,0);
     }
@@ -381,61 +455,180 @@
       document.getElementById('calc-80').innerText = comp ? formatMoney(comp * 0.8) : '--';
       document.getElementById('calc-70').innerText = comp ? formatMoney(comp * 0.7) : '--';
 
+      const pctEl = document.getElementById('calc-pct');
       if (comp > 0 && offer > 0) {
-        document.getElementById('calc-pct').innerText = ((offer / comp) * 100).toFixed(1) + '%';
+        const pctVal = (offer / comp) * 100;
+        pctEl.innerText = pctVal.toFixed(1) + '%';
+        pctEl.style.color = getColorForPct(pctVal);
       } else {
-        document.getElementById('calc-pct').innerText = '--';
+        pctEl.innerText = '--';
+        pctEl.style.color = 'var(--primary)';
       }
     }
 
     document.getElementById('calc-offer').addEventListener('input', updateCalc);
+    document.getElementById('calc-comp').addEventListener('input', updateCalc);
 
-    function addManualToSellList() {
+    function saveToSellList() {
       const offer = parseFloat(document.getElementById('calc-offer').value);
       const comp = parseFloat(document.getElementById('calc-comp').value);
       const desc = document.getElementById('calc-desc').value.trim() || "Unknown Card";
 
       if(isNaN(offer)) return alert("Enter an offer first");
 
+      // If the user modified the description heavily, it might not match structured data anymore.
+      // We'll prioritize the custom desc string as the player name if it's completely unlinked.
+      const item = {
+        player: currentMathCard.player || desc,
+        year: currentMathCard.year || "",
+        set: currentMathCard.set || "",
+        number: currentMathCard.number || "",
+        condition: currentMathCard.condition || "",
+        customDesc: desc,
+        comp: comp || 0, 
+        salePrice: offer, 
+        date: new Date().toISOString()
+      };
+
+      // If desc differs entirely from stored player, fallback to desc.
+      if (!desc.includes(currentMathCard.player) && currentMathCard.player !== "") {
+         item.player = desc; item.year = ""; item.set = ""; item.number = ""; item.condition = "";
+      }
+
       const store = getStore('sellList', 'readwrite');
-      store.add({ title: desc, comp: comp || 0, salePrice: offer, date: new Date().toISOString() });
+      if (editingSellId) {
+        item.id = editingSellId;
+        store.put(item);
+      } else {
+        store.add(item);
+      }
+
       store.transaction.oncomplete = () => {
-        document.getElementById('calc-offer').value = '';
-        document.getElementById('calc-desc').value = '';
-        document.getElementById('calc-comp').value = '';
-        document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
-        updateCalc();
+        // Reset Math UI
+        ['calc-offer', 'calc-desc', 'calc-comp'].forEach(id => {
+          const el = document.getElementById(id);
+          el.value = '';
+          el.dispatchEvent(new Event('input'));
+        });
+        clearMiniComps();
+        currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
+        editingSellId = null;
+        document.getElementById('math-save-btn').innerText = "Add to Sell List";
         switchTab('sell');
       };
     }
 
+    // --- Sell List ---
     function loadSellList() {
       const req = getStore('sellList', 'readonly').getAll();
       req.onsuccess = () => {
-        const list = req.result.reverse();
-        let total = 0;
-
-        const html = list.map(item => {
-          total += item.salePrice;
-          const pct = item.comp > 0 ? ((item.salePrice / item.comp) * 100).toFixed(1) + '%' : 'N/A';
-          return `
-            <div class="card">
-              <div style="font-weight:700; font-size:16px; margin-bottom:4px;">${item.title}</div>
-              <div class="card-row" style="margin-top:8px; margin-bottom:0;">
-                <div><span class="card-meta">Sold For:</span> <span class="val-large" style="color:var(--primary);">${formatMoney(item.salePrice)}</span></div>
-                <div class="card-meta">Comp: ${formatMoney(item.comp)} <br/>(${pct} of Comp)</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        document.getElementById('sell-list').innerHTML = html || '<p style="text-align:center; color:var(--text-muted);">No cards sold yet.</p>';
-        document.getElementById('sell-total').innerText = formatMoney(total);
+        sellCards = req.result;
+        renderSellListUI();
       };
     }
 
+    function renderSellListUI() {
+      const fSearch = document.getElementById('s-search').value.toLowerCase().trim();
+      const fYear = document.getElementById('s-year').value.toLowerCase().trim();
+      const fSort = document.getElementById('s-sort').value;
+      const searchTerms = fSearch.split(/\s+/).filter(term => term.length > 0);
+
+      let filtered = sellCards.filter(c => {
+        const searchString = `${c.player} ${c.set} ${c.year} ${c.customDesc}`.toLowerCase();
+        const matchesSearch = searchTerms.every(term => searchString.includes(term));
+        const matchesYear = !fYear || c.year.toLowerCase().includes(fYear);
+        return matchesSearch && matchesYear;
+      });
+
+      filtered.sort((a, b) => {
+        if (fSort === 'time-desc') return new Date(b.date) - new Date(a.date);
+        if (fSort === 'price-desc') return b.salePrice - a.salePrice;
+        if (fSort === 'price-asc') return a.salePrice - b.salePrice;
+        if (fSort === 'name-asc') return (a.player || a.customDesc).localeCompare(b.player || b.customDesc);
+        return 0;
+      });
+
+      document.getElementById('sell-count').innerText = `Sold Cards (${filtered.length})`;
+
+      let total = 0;
+      const html = filtered.map(item => {
+        total += item.salePrice;
+        let pctStr = '--';
+        let color = 'var(--text-muted)';
+        if (item.comp > 0) {
+          const pctVal = (item.salePrice / item.comp) * 100;
+          pctStr = pctVal.toFixed(1) + '%';
+          color = getColorForPct(pctVal);
+        }
+
+        // Consistent layout identical to DB card
+        return `
+          <div class="card">
+            <div class="card-title">${item.player}</div>
+            <div class="card-meta">${item.year} ${item.set} ${item.number ? '#'+item.number : ''} <br/> <strong>${item.condition}</strong></div>
+            <div class="card-row">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Sold For</div>
+                <div class="val-large" style="color:var(--primary);">${formatMoney(item.salePrice)}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; color:var(--text-muted);">Comp: ${formatMoney(item.comp)}</div>
+                <div style="font-weight:700; color:${color};">${pctStr}</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:12px; border-top:1px solid var(--surface-alt); padding-top:12px;">
+              <button class="btn-small btn-outline" style="flex:1" onclick="editSellItem(${item.id})">Edit</button>
+              <button class="btn-small btn-danger" style="flex:0 0 auto; padding: 8px 16px;" onclick="deleteSellItem(${item.id})" aria-label="Delete">
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('sell-list').innerHTML = html || '<p style="text-align:center; color:var(--text-muted);">No cards sold yet.</p>';
+      document.getElementById('sell-total').innerText = formatMoney(total);
+    }
+
+    ['s-search', 's-year', 's-sort'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderSellListUI);
+    });
+
+    function editSellItem(id) {
+      const item = sellCards.find(c => c.id === id);
+      if(!item) return;
+
+      editingSellId = item.id;
+      currentMathCard = { player: item.player, year: item.year, set: item.set, number: item.number, condition: item.condition };
+
+      const inputDesc = document.getElementById('calc-desc');
+      inputDesc.value = item.customDesc || item.player;
+      inputDesc.dispatchEvent(new Event('input'));
+
+      const inputComp = document.getElementById('calc-comp');
+      inputComp.value = item.comp;
+      inputComp.dispatchEvent(new Event('input'));
+
+      const inputOffer = document.getElementById('calc-offer');
+      inputOffer.value = item.salePrice;
+      inputOffer.dispatchEvent(new Event('input'));
+
+      clearMiniComps();
+      document.getElementById('math-save-btn').innerText = "Update Sell List";
+      switchTab('calc');
+      window.scrollTo(0,0);
+    }
+
+    function deleteSellItem(id) {
+      if(!confirm("Remove this single card from the sell list?")) return;
+      const store = getStore('sellList', 'readwrite');
+      store.delete(id);
+      store.transaction.oncomplete = loadSellList;
+    }
+
     function clearSellList() {
-      if(!confirm("Clear all items from the sell list?")) return;
+      if(!confirm("Clear ALL items from the sell list?")) return;
       const store = getStore('sellList', 'readwrite');
       store.clear();
       store.transaction.oncomplete = loadSellList;
@@ -452,10 +645,10 @@
       };
     }
 
+    // --- Init ---
     initSettings();
-    initDB().then(() => {
-      loadDatabaseView();
-    });
+    attachClearButtons();
+    initDB().then(() => loadDatabaseView());
 
   </script>
 </body>
