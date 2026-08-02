@@ -49,6 +49,11 @@
     .stat-box { background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); text-align: center; }
     .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
     .stat-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+
+    /* New styles for small individual comps */
+    .mini-comps-container { display: flex; gap: 6px; margin-top: -8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+    .mini-comp-input { flex: 1; min-width: 60px; padding: 6px 8px; font-size: 13px; font-style: italic; color: var(--text-muted); margin-bottom: 0; text-align: center; }
+    .mini-comps-label { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: -8px; margin-bottom: 4px; display: block; }
   </style>
 </head>
 <body>
@@ -92,10 +97,16 @@
       <div class="card" id="calc-card">
         <label>Card Name / Description</label>
         <input type="text" id="calc-desc" placeholder="e.g. 2024 Topps Chrome Shohei Ohtani">
-        <label>Average Comp ($)</label>
-        <input type="number" id="calc-comp" placeholder="e.g. 100">
 
-        <div class="stats-grid" style="margin-top: 12px;">
+        <label>Average Comp ($)</label>
+        <input type="number" id="calc-comp" placeholder="e.g. 100" oninput="clearMiniComps()">
+
+        <span class="mini-comps-label" id="mini-comps-label">Enter recent sales to auto-average:</span>
+        <div class="mini-comps-container" id="mini-comps-container">
+          <!-- JS injects inputs here -->
+        </div>
+
+        <div class="stats-grid" style="margin-top: 4px;">
           <div class="stat-box"><div class="stat-label">90% Buy</div><div class="stat-val" id="calc-90">--</div></div>
           <div class="stat-box"><div class="stat-label">80% Buy</div><div class="stat-val" id="calc-80">--</div></div>
           <div class="stat-box"><div class="stat-label">70% Buy</div><div class="stat-val" id="calc-70">--</div></div>
@@ -124,11 +135,18 @@
       <div id="sell-list"></div>
     </div>
 
-    <!-- RENAMED TO OPTIONS -->
     <div id="tab-options" class="tab-content">
       <div class="card">
-        <h2 style="margin-bottom:8px; font-size:18px;">Display Settings</h2>
-        <label>Currency Format</label>
+        <h2 style="margin-bottom:8px; font-size:18px;">Math & Calculator Settings</h2>
+
+        <label>Number of Recent Sales to Average</label>
+        <select id="pref-comp-count" onchange="updateCompCountPref()">
+          <option value="0">Hide recent sales boxes</option>
+          <option value="3">3 Recent Sales</option>
+          <option value="5">5 Recent Sales</option>
+        </select>
+
+        <label style="margin-top: 12px;">Currency Format</label>
         <select id="pref-currency" onchange="updateCurrencyPref()">
           <option value="shorthand">Shorthand (e.g. $15.5k)</option>
           <option value="full">Full Number (e.g. $15,500.00)</option>
@@ -157,33 +175,82 @@
     let db;
     let allCards = [];
 
-    // --- Format Helper ---
+    // --- Format & Settings Helper ---
     function formatMoney(value) {
       if (value === undefined || value === null || isNaN(value)) return '--';
       const pref = localStorage.getItem('currencyFormat') || 'shorthand';
 
       if (pref === 'shorthand' && value >= 1000) {
-        // e.g. 15242 -> 15.242k, 15500 -> 15.5k
         return '$' + parseFloat((value / 1000).toFixed(3)) + 'k';
       } else {
-        // Full with commas, e.g. $15,500.00
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
       }
     }
 
     function initSettings() {
-      const pref = localStorage.getItem('currencyFormat') || 'shorthand';
-      document.getElementById('pref-currency').value = pref;
+      document.getElementById('pref-currency').value = localStorage.getItem('currencyFormat') || 'shorthand';
+      document.getElementById('pref-comp-count').value = localStorage.getItem('compCount') || '3';
+      renderMiniComps();
     }
 
     function updateCurrencyPref() {
       localStorage.setItem('currencyFormat', document.getElementById('pref-currency').value);
-      // Re-render UI to reflect changes immediately
       renderCollection();
       loadSellList();
       updateCalc();
     }
 
+    function updateCompCountPref() {
+      localStorage.setItem('compCount', document.getElementById('pref-comp-count').value);
+      renderMiniComps();
+    }
+
+    // --- Mini Comps Auto-Averaging ---
+    function renderMiniComps() {
+      const count = parseInt(localStorage.getItem('compCount') || '3');
+      const container = document.getElementById('mini-comps-container');
+      const label = document.getElementById('mini-comps-label');
+
+      if (count === 0) {
+        container.style.display = 'none';
+        label.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'flex';
+      label.style.display = 'block';
+      let html = '';
+      for (let i = 1; i <= count; i++) {
+        html += `<input type="number" class="mini-comp-input" placeholder="Sale ${i}" oninput="calculateMiniComps()">`;
+      }
+      container.innerHTML = html;
+    }
+
+    function calculateMiniComps() {
+      let sum = 0;
+      let count = 0;
+      document.querySelectorAll('.mini-comp-input').forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val > 0) {
+          sum += val;
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        const avg = (sum / count).toFixed(2);
+        document.getElementById('calc-comp').value = avg;
+        updateCalc();
+      }
+    }
+
+    function clearMiniComps() {
+      // If user types directly into Main Average Comp, clear out the mini inputs so they don't get confused
+      document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
+      updateCalc();
+    }
+
+    // --- DB Setup ---
     const initDB = () => {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, 1);
@@ -212,36 +279,27 @@
     function processCSV() {
       const file = document.getElementById('csv-file').files[0];
       if (!file) return alert("Select a file first.");
-
       document.getElementById('import-status').innerText = "Parsing...";
-
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
           const cards = results.data.map((r, i) => {
-            const pName = r['Player'] || r['Players'] || r['Player Name'] || r['Subject'] || '';
-            const sName = r['Set'] || r['Brand'] || '';
-            const cNum = r['Number'] || r['Card Number'] || '';
-            const val = parseFloat((r['Current Value'] || '0').replace(/[^0-9.-]+/g,""));
-            const inv = parseFloat((r['Investment'] || '0').replace(/[^0-9.-]+/g,""));
-
             return {
               id: r['Ladder ID'] || `local-${i}-${Date.now()}`,
-              player: pName,
+              player: r['Player'] || r['Players'] || r['Player Name'] || r['Subject'] || '',
               year: r['Year'] || '',
-              set: sName,
-              number: cNum,
+              set: r['Set'] || r['Brand'] || '',
+              number: r['Number'] || r['Card Number'] || '',
               condition: r['Condition'] || '',
-              value: val,
-              investment: inv
+              value: parseFloat((r['Current Value'] || '0').replace(/[^0-9.-]+/g,"")),
+              investment: parseFloat((r['Investment'] || '0').replace(/[^0-9.-]+/g,""))
             };
           }).filter(c => c.player || c.set); 
 
           const store = getStore('cards', 'readwrite');
           store.clear(); 
           cards.forEach(c => store.put(c));
-
           store.transaction.oncomplete = () => {
             document.getElementById('import-status').innerText = `Success! Loaded ${cards.length} cards.`;
             loadDatabaseView();
@@ -253,24 +311,19 @@
     function loadDatabaseView() {
       const store = getStore('cards', 'readonly');
       const req = store.getAll();
-      req.onsuccess = () => {
-        allCards = req.result;
-        renderCollection();
-      };
+      req.onsuccess = () => { allCards = req.result; renderCollection(); };
     }
 
     function renderCollection() {
       const fSearch = document.getElementById('f-search').value.toLowerCase().trim();
       const fYear = document.getElementById('f-year').value.toLowerCase().trim();
       const fSort = document.getElementById('f-sort').value;
-
       const searchTerms = fSearch.split(/\s+/).filter(term => term.length > 0);
 
       let filtered = allCards.filter(c => {
         const searchString = `${c.player} ${c.set} ${c.year} ${c.number}`.toLowerCase();
         const matchesSearch = searchTerms.every(term => searchString.includes(term));
         const matchesYear = !fYear || c.year.toLowerCase().includes(fYear);
-
         return matchesSearch && matchesYear;
       });
 
@@ -312,6 +365,9 @@
       document.getElementById('calc-comp').value = c.value;
       document.getElementById('calc-offer').value = '';
 
+      // Clear mini comps since we pulled a pre-averaged value from the DB
+      document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
+
       updateCalc();
       switchTab('calc');
       window.scrollTo(0,0);
@@ -332,9 +388,7 @@
       }
     }
 
-    ['calc-comp', 'calc-offer'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateCalc);
-    });
+    document.getElementById('calc-offer').addEventListener('input', updateCalc);
 
     function addManualToSellList() {
       const offer = parseFloat(document.getElementById('calc-offer').value);
@@ -349,6 +403,7 @@
         document.getElementById('calc-offer').value = '';
         document.getElementById('calc-desc').value = '';
         document.getElementById('calc-comp').value = '';
+        document.querySelectorAll('.mini-comp-input').forEach(input => input.value = '');
         updateCalc();
         switchTab('sell');
       };
