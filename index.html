@@ -95,9 +95,9 @@
     body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; transition: background 0.3s ease, color 0.3s ease; }
 
     .top-nav { position: sticky; top: 0; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; z-index: 20; padding-top: env(safe-area-inset-top); transition: background 0.3s ease, border-color 0.3s ease; }
-    .nav-btn { flex: 1; padding: 12px 0; border: none; background: none; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.3s ease; }
+    .nav-btn { flex: 1; padding: 12px 0; border: none; background: none; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.3s ease; }
     .nav-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 9px; }
-    .nav-btn svg { width: 22px; height: 22px; }
+    .nav-btn svg { width: 20px; height: 20px; }
 
     .content { padding: 16px; padding-bottom: env(safe-area-inset-bottom); }
     .tab-content { display: none; }
@@ -106,7 +106,7 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background 0.3s ease, border-color 0.3s ease; }
     .card-title { font-weight: 700; font-size: 18px; margin-bottom: 2px; color: var(--primary); }
     .card-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
-    .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .card-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
     .val-large { font-weight: 700; font-size: 18px; }
 
     input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text); margin-bottom: 12px; transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
@@ -120,8 +120,6 @@
     .btn-small { width: auto; padding: 8px 16px; font-size: 14px; cursor: pointer; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-
-    /* Inverted button that dynamically adapts to light/dark themes */
     .btn-dark { background: var(--text); color: var(--bg); border: 1px solid var(--text); transition: background 0.3s ease, color 0.3s ease; }
 
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
@@ -138,6 +136,11 @@
 
     .counter-list-item { background: var(--surface-alt); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease; }
     .counter-list-item .btn-small { padding: 6px 12px; font-size: 13px; }
+
+    /* Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+    .modal-overlay.active { display: flex; }
+    .modal-content { width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
@@ -145,7 +148,11 @@
   <nav class="top-nav">
     <button class="nav-btn active" onclick="switchTab('db')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>
-      Database
+      DB
+    </button>
+    <button class="nav-btn" onclick="switchTab('lists')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      Lists
     </button>
     <button class="nav-btn" onclick="switchTab('calc')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M16 14v4M12 14v4M8 14v4M16 10h.01M12 10h.01M8 10h.01"/></svg>
@@ -153,7 +160,7 @@
     </button>
     <button class="nav-btn" onclick="switchTab('sell')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Sell List
+      Sold
     </button>
     <button class="nav-btn" onclick="switchTab('options')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -163,6 +170,7 @@
 
   <main class="content">
 
+    <!-- DATABASE TAB -->
     <div id="tab-db" class="tab-content active">
       <div class="filter-grid">
         <input type="text" id="f-search" class="filter-full with-clear" placeholder="Search Player, Set, or Card Name...">
@@ -175,6 +183,31 @@
       </div>
       <div id="db-count" style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Loading...</div>
       <div id="db-list"></div>
+    </div>
+
+    <!-- NEW LISTS TAB -->
+    <div id="tab-lists" class="tab-content">
+      <div class="card" style="border-color: var(--primary);">
+        <h2 style="font-size:18px; margin-bottom:12px; color:var(--primary);">Manage Show Lists</h2>
+        <label>Select Active List</label>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <select id="active-list-select" onchange="renderActiveList()"></select>
+          <button class="btn-small btn-danger" onclick="deleteActiveList()">Delete</button>
+        </div>
+        <div style="border-top: 1px solid var(--surface-alt); padding-top: 16px;">
+           <label>Create New List</label>
+           <div style="display: flex; gap: 8px;">
+             <input type="text" id="tab-new-list-name" placeholder="e.g. Dallas Show..." style="margin-bottom:0; flex: 1;">
+             <button class="btn-small btn" style="flex: 0 0 auto;" onclick="createNewListFromTab()">Create</button>
+           </div>
+        </div>
+      </div>
+
+      <div id="active-list-header" style="display:flex; justify-content:space-between; margin-bottom:12px; margin-top:12px; align-items: center;">
+        <h3 style="font-size:16px;" id="active-list-count">Cards in List (0)</h3>
+        <span id="active-list-value" style="font-weight:700; color:var(--primary); font-size:16px;">$0.00</span>
+      </div>
+      <div id="active-list-container"></div>
     </div>
 
     <!-- COMPS TAB -->
@@ -221,7 +254,7 @@
           <div id="counter-list"></div>
         </div>
 
-        <button class="btn" style="margin-top: 16px;" id="math-save-btn" onclick="saveToSellList()">Add to Sell List</button>
+        <button class="btn" style="margin-top: 16px;" id="math-save-btn" onclick="saveToSellList()">Add to Sold List</button>
       </div>
     </div>
 
@@ -253,7 +286,6 @@
     <!-- OPTIONS TAB -->
     <div id="tab-options" class="tab-content">
 
-      <!-- NEW: Theme Selector -->
       <div class="card" style="border-color: var(--primary);">
         <h2 style="margin-bottom:8px; font-size:18px; color: var(--primary);">App Theme</h2>
         <label>Select a Color Palette</label>
@@ -311,15 +343,40 @@
 
   </main>
 
+  <!-- ADD TO LIST MODAL -->
+  <div id="list-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="modal-card-title" style="margin-bottom: 16px; font-size: 18px; color: var(--primary);">Add to List</h3>
+
+      <label>Existing Lists</label>
+      <div id="modal-lists-container" style="margin-bottom: 16px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Filled via JS -->
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+        <label>Or Create New List</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="modal-new-list-name" placeholder="List Name..." style="margin-bottom:0; flex: 1;">
+          <button class="btn-small btn" style="flex: 0 0 auto;" onclick="createNewListFromModal()">Create & Add</button>
+        </div>
+      </div>
+
+      <button class="btn-outline btn" style="margin-top: 24px; padding: 10px;" onclick="closeListModal()">Cancel</button>
+    </div>
+  </div>
+
   <script>
-    const DB_NAME = 'CardShowApp_v2';
+    // Updated to v3 to create the new 'userLists' object store safely
+    const DB_NAME = 'CardShowApp_v3';
     let db;
     let allCards = [];
     let sellCards = []; 
+    let userLists = [];
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
     let editingSellId = null;
+    let activeCardForList = null;
 
-    // --- NEW: Theme Management ---
+    // --- THEME & SETTINGS ---
     function updateTheme() {
         const theme = document.getElementById('pref-theme').value;
         document.documentElement.setAttribute('data-theme', theme);
@@ -327,7 +384,6 @@
     }
 
     function initSettings() {
-      // Load saved theme and apply it immediately
       const savedTheme = localStorage.getItem('appTheme') || 'default';
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('pref-theme').value = savedTheme;
@@ -337,17 +393,229 @@
       renderMiniComps();
     }
 
+    // --- DB INIT ---
+    const initDB = () => {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 3);
+        req.onupgradeneeded = (e) => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains('cards')) d.createObjectStore('cards', { keyPath: 'id' });
+          if (!d.objectStoreNames.contains('sellList')) d.createObjectStore('sellList', { keyPath: 'id', autoIncrement: true });
+          if (!d.objectStoreNames.contains('userLists')) d.createObjectStore('userLists', { keyPath: 'id' });
+        };
+        req.onsuccess = (e) => { db = e.target.result; resolve(); };
+        req.onerror = (e) => reject(e);
+      });
+    };
+    const getStore = (storeName, mode) => db.transaction(storeName, mode).objectStore(storeName);
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+
+      if (tabId === 'db') loadDatabaseView();
+      if (tabId === 'sell') loadSellList();
+      if (tabId === 'lists') loadListsView();
+
+      if (tabId !== 'calc') {
+         editingSellId = null;
+         document.getElementById('math-save-btn').innerText = "Add to Sold List";
+      }
+    }
+
+    // --- LISTS FEATURE ---
+    function loadListsView() {
+      const req = getStore('userLists', 'readonly').getAll();
+      req.onsuccess = () => { 
+        userLists = req.result || [];
+        populateListDropdowns();
+        renderActiveList();
+      };
+    }
+
+    function populateListDropdowns() {
+      const select = document.getElementById('active-list-select');
+      const prevVal = select.value;
+
+      if (userLists.length === 0) {
+        select.innerHTML = '<option value="">No lists created</option>';
+        select.disabled = true;
+      } else {
+        select.disabled = false;
+        select.innerHTML = userLists.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+        if (prevVal && userLists.find(l => l.id === prevVal)) {
+          select.value = prevVal;
+        } else {
+          select.value = userLists[0].id;
+        }
+      }
+    }
+
+    function renderActiveList() {
+      const select = document.getElementById('active-list-select');
+      const container = document.getElementById('active-list-container');
+      const countEl = document.getElementById('active-list-count');
+      const valEl = document.getElementById('active-list-value');
+
+      if (!select.value || userLists.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Create a list above to get started.</p>';
+        countEl.innerText = `Cards in List (0)`;
+        valEl.innerText = '$0.00';
+        return;
+      }
+
+      const activeList = userLists.find(l => l.id === select.value);
+      if (!activeList) return;
+
+      const listCards = activeList.cards.map(cardId => allCards.find(c => c.id === cardId)).filter(Boolean);
+
+      let totalVal = 0;
+      listCards.forEach(c => totalVal += (c.value || 0));
+
+      countEl.innerText = `Cards in List (${listCards.length})`;
+      valEl.innerText = formatMoney(totalVal);
+
+      if (listCards.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 24px 0;">This list is empty. Add cards from the DB tab.</p>';
+        return;
+      }
+
+      const html = listCards.map(c => `
+        <div class="card">
+          <div class="card-title">${c.player}</div>
+          <div class="card-meta">${c.year} ${c.set} ${c.number ? '#'+c.number : ''} <br/> <strong>${c.condition}</strong></div>
+          <div class="card-row">
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">Current Value</div>
+              <div class="val-large">${formatMoney(c.value)}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:12px; border-top: 1px solid var(--surface-alt); padding-top: 12px;">
+            <button class="btn-small btn-outline" style="flex:1; border-color: var(--danger); color: var(--danger);" onclick="removeCardFromList('${c.id}', '${activeList.id}')">Remove</button>
+            <button class="btn-small btn" style="flex:1;" onclick="loadIntoMathTab('${c.id}')">Run Comps</button>
+          </div>
+        </div>
+      `).join('');
+
+      container.innerHTML = html;
+    }
+
+    function createNewListFromTab() {
+      const input = document.getElementById('tab-new-list-name');
+      const name = input.value.trim();
+      if (!name) return alert("Enter a list name.");
+
+      const newList = { id: `list-${Date.now()}`, name: name, cards: [] };
+      const store = getStore('userLists', 'readwrite');
+      store.add(newList);
+      store.transaction.oncomplete = () => {
+        input.value = '';
+        loadListsView(); // re-fetches and updates dropdown
+        setTimeout(() => {
+          document.getElementById('active-list-select').value = newList.id;
+          renderActiveList();
+        }, 50);
+      };
+    }
+
+    function deleteActiveList() {
+      const select = document.getElementById('active-list-select');
+      if (!select.value) return;
+      if (!confirm("Are you sure you want to delete this list? The cards will remain in your database.")) return;
+
+      const store = getStore('userLists', 'readwrite');
+      store.delete(select.value);
+      store.transaction.oncomplete = loadListsView;
+    }
+
+    function openListModal(cardId) {
+      activeCardForList = cardId;
+      const c = allCards.find(x => x.id === cardId);
+      document.getElementById('modal-card-title').innerText = `Add ${c.player} to List`;
+
+      const req = getStore('userLists', 'readonly').getAll();
+      req.onsuccess = () => {
+        userLists = req.result || [];
+        const container = document.getElementById('modal-lists-container');
+
+        if (userLists.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No lists created yet.</p>';
+        } else {
+          container.innerHTML = userLists.map(l => `
+            <button class="btn-outline btn" style="text-align: left; padding: 10px; font-size: 15px;" onclick="addCardToList('${l.id}')">
+               ${l.name} <span style="float:right; color:var(--text-muted); font-size: 13px;">(${l.cards.length} cards)</span>
+            </button>
+          `).join('');
+        }
+        document.getElementById('modal-new-list-name').value = '';
+        document.getElementById('list-modal').classList.add('active');
+      };
+    }
+
+    function closeListModal() {
+      document.getElementById('list-modal').classList.remove('active');
+      activeCardForList = null;
+    }
+
+    function createNewListFromModal() {
+      const name = document.getElementById('modal-new-list-name').value.trim();
+      if (!name) return alert("Enter a list name.");
+      if (!activeCardForList) return closeListModal();
+
+      const newList = { id: `list-${Date.now()}`, name: name, cards: [activeCardForList] };
+      const store = getStore('userLists', 'readwrite');
+      store.add(newList);
+      store.transaction.oncomplete = () => {
+        alert("List created and card added!");
+        closeListModal();
+      };
+    }
+
+    function addCardToList(listId) {
+      if (!activeCardForList) return closeListModal();
+
+      const store = getStore('userLists', 'readwrite');
+      const req = store.get(listId);
+      req.onsuccess = () => {
+        const list = req.result;
+        if (!list.cards.includes(activeCardForList)) {
+          list.cards.push(activeCardForList);
+          store.put(list);
+          alert("Added to list!");
+        } else {
+          alert("Card is already in this list.");
+        }
+        closeListModal();
+      };
+    }
+
+    function removeCardFromList(cardId, listId) {
+      const store = getStore('userLists', 'readwrite');
+      const req = store.get(listId);
+      req.onsuccess = () => {
+        const list = req.result;
+        list.cards = list.cards.filter(id => id !== cardId);
+        store.put(list);
+        store.transaction.oncomplete = () => {
+          // Update memory array and re-render
+          const idx = userLists.findIndex(l => l.id === listId);
+          if(idx !== -1) userLists[idx] = list;
+          renderActiveList();
+        };
+      };
+    }
+
+    // --- EXISTING DB & CALC LOGIC ---
     function copyCardName() {
         const descStr = document.getElementById('calc-desc').value.trim();
         if (!descStr) return;
-
         navigator.clipboard.writeText(descStr).then(() => {
             const btnText = document.getElementById('copy-btn-text');
             btnText.innerText = "Copied!";
             setTimeout(() => { btnText.innerText = "1. Copy Name"; }, 2000);
-        }).catch(() => {
-            alert("Copy failed.");
-        });
+        }).catch(() => { alert("Copy failed."); });
     }
 
     function formatMoney(value) {
@@ -395,6 +663,7 @@
       localStorage.setItem('currencyFormat', document.getElementById('pref-currency').value);
       renderCollection();
       renderSellListUI();
+      if(document.getElementById('tab-lists').classList.contains('active')) renderActiveList();
       updateCalc();
     }
 
@@ -443,35 +712,6 @@
         input.value = '';
         input.dispatchEvent(new Event('input'));
       });
-    }
-
-    const initDB = () => {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          const d = e.target.result;
-          if (!d.objectStoreNames.contains('cards')) d.createObjectStore('cards', { keyPath: 'id' });
-          if (!d.objectStoreNames.contains('sellList')) d.createObjectStore('sellList', { keyPath: 'id', autoIncrement: true });
-        };
-        req.onsuccess = (e) => { db = e.target.result; resolve(); };
-        req.onerror = (e) => reject(e);
-      });
-    };
-    const getStore = (storeName, mode) => db.transaction(storeName, mode).objectStore(storeName);
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-      document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-
-      if (tabId === 'db') loadDatabaseView();
-      if (tabId === 'sell') loadSellList();
-
-      if (tabId !== 'calc') {
-         editingSellId = null;
-         document.getElementById('math-save-btn').innerText = "Add to Sell List";
-      }
     }
 
     function processCSV() {
@@ -540,7 +780,10 @@
               <div style="font-size:12px; color:var(--text-muted);">Current Value</div>
               <div class="val-large">${formatMoney(c.value)}</div>
             </div>
-            <button class="btn-small btn" onclick="loadIntoMathTab('${c.id}')">Run Comps</button>
+          </div>
+          <div style="display:flex; gap:8px; margin-top: 12px; border-top: 1px solid var(--surface-alt); padding-top: 12px;">
+            <button class="btn-small btn-outline" style="flex:1" onclick="openListModal('${c.id}')">+ List</button>
+            <button class="btn-small btn" style="flex:1" onclick="loadIntoMathTab('${c.id}')">Run Comps</button>
           </div>
         </div>
       `).join('');
@@ -572,7 +815,7 @@
 
       clearMiniComps();
       editingSellId = null;
-      document.getElementById('math-save-btn').innerText = "Add to Sell List";
+      document.getElementById('math-save-btn').innerText = "Add to Sold List";
 
       switchTab('calc');
       window.scrollTo(0,0);
@@ -673,7 +916,7 @@
         clearMiniComps();
         currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
         editingSellId = null;
-        document.getElementById('math-save-btn').innerText = "Add to Sell List";
+        document.getElementById('math-save-btn').innerText = "Add to Sold List";
         switchTab('sell');
       };
     }
@@ -773,20 +1016,20 @@
       inputOffer.dispatchEvent(new Event('input'));
 
       clearMiniComps();
-      document.getElementById('math-save-btn').innerText = "Update Sell List";
+      document.getElementById('math-save-btn').innerText = "Update Sold List";
       switchTab('calc');
       window.scrollTo(0,0);
     }
 
     function deleteSellItem(id) {
-      if(!confirm("Remove this single card from the sell list?")) return;
+      if(!confirm("Remove this single card from the sold list?")) return;
       const store = getStore('sellList', 'readwrite');
       store.delete(id);
       store.transaction.oncomplete = loadSellList;
     }
 
     function clearSellList() {
-      if(!confirm("Clear ALL items from the sell list?")) return;
+      if(!confirm("Clear ALL items from the sold list?")) return;
       const store = getStore('sellList', 'readwrite');
       store.clear();
       store.transaction.oncomplete = loadSellList;
@@ -805,7 +1048,11 @@
 
     initSettings();
     attachClearButtons();
-    initDB().then(() => loadDatabaseView());
+    initDB().then(() => {
+      loadDatabaseView();
+      // Load userLists array into memory silently
+      getStore('userLists', 'readonly').getAll().onsuccess = (e) => userLists = e.target.result || [];
+    });
 
   </script>
 </body>
