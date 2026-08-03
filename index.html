@@ -249,6 +249,19 @@
           <span class="val-large" id="calc-pct" style="color: var(--primary);">--</span>
         </div>
 
+        <!-- NEW: LIST PROJECTION PANEL -->
+        <div id="list-projection-panel" style="display:none; margin-top: 16px; padding: 12px; border-radius: var(--radius-sm); background: var(--surface-alt); border: 1px solid var(--border);">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Active List: <span id="lp-name" style="color: var(--primary);"></span></div>
+          <div class="card-row" style="margin-bottom: 4px;">
+            <span style="font-size: 13px;">Original DB Value:</span>
+            <span style="font-weight: 700; font-size: 14px;" id="lp-orig"></span>
+          </div>
+          <div class="card-row" style="margin-bottom: 0;">
+            <span style="font-size: 13px; font-weight: 700;">Projected w/ Offer:</span>
+            <span class="val-large" id="lp-proj" style="font-size: 16px;"></span>
+          </div>
+        </div>
+
         <div id="counter-guide" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--surface-alt);">
           <label style="margin-bottom: 8px;">Counter-Offer Guide</label>
           <div id="counter-list"></div>
@@ -258,15 +271,18 @@
       </div>
     </div>
 
-    <!-- SELL LIST TAB -->
+    <!-- SOLD LIST TAB -->
     <div id="tab-sell" class="tab-content">
       <div class="card" style="text-align: center; border-color: var(--primary);">
-        <div class="stat-label">Show Running Total</div>
+        <div class="stat-label">Total Sold (Selected Show)</div>
         <div class="stat-val" style="font-size: 32px; color: var(--primary);" id="sell-total">$0.00</div>
       </div>
 
       <div class="filter-grid">
         <input type="text" id="s-search" class="filter-full with-clear" placeholder="Search Sold Cards...">
+        <select id="s-show" class="filter-full" onchange="renderSellListUI()">
+          <option value="ALL">All Shows / No Show</option>
+        </select>
         <input type="text" id="s-year" class="with-clear" placeholder="Year">
         <select id="s-sort">
           <option value="time-desc">Most Recent First</option>
@@ -366,13 +382,13 @@
   </div>
 
   <script>
-    // Updated to v3 to create the new 'userLists' object store safely
     const DB_NAME = 'CardShowApp_v3';
     let db;
     let allCards = [];
     let sellCards = []; 
     let userLists = [];
     let currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
+    let currentListInfo = null; // Holds data for real-time list value projection
     let editingSellId = null;
     let activeCardForList = null;
 
@@ -421,6 +437,7 @@
 
       if (tabId !== 'calc') {
          editingSellId = null;
+         currentListInfo = null; // Clear context if navigating away directly
          document.getElementById('math-save-btn').innerText = "Add to Sold List";
       }
     }
@@ -494,7 +511,7 @@
           </div>
           <div style="display:flex; gap:8px; margin-top:12px; border-top: 1px solid var(--surface-alt); padding-top: 12px;">
             <button class="btn-small btn-outline" style="flex:1; border-color: var(--danger); color: var(--danger);" onclick="removeCardFromList('${c.id}', '${activeList.id}')">Remove</button>
-            <button class="btn-small btn" style="flex:1;" onclick="loadIntoMathTab('${c.id}')">Run Comps</button>
+            <button class="btn-small btn" style="flex:1;" onclick="loadIntoMathTab('${c.id}', '${activeList.id}')">Run Comps</button>
           </div>
         </div>
       `).join('');
@@ -512,7 +529,7 @@
       store.add(newList);
       store.transaction.oncomplete = () => {
         input.value = '';
-        loadListsView(); // re-fetches and updates dropdown
+        loadListsView();
         setTimeout(() => {
           document.getElementById('active-list-select').value = newList.id;
           renderActiveList();
@@ -599,7 +616,6 @@
         list.cards = list.cards.filter(id => id !== cardId);
         store.put(list);
         store.transaction.oncomplete = () => {
-          // Update memory array and re-render
           const idx = userLists.findIndex(l => l.id === listId);
           if(idx !== -1) userLists[idx] = list;
           renderActiveList();
@@ -795,9 +811,31 @@
       document.getElementById(id).addEventListener('input', renderCollection);
     });
 
-    function loadIntoMathTab(id) {
+    function loadIntoMathTab(id, listId = null) {
       const c = allCards.find(card => card.id === id);
       if(!c) return;
+
+      // Manage list context for projections
+      if (listId) {
+        const activeList = userLists.find(l => l.id === listId);
+        if (activeList) {
+          let listTotalVal = 0;
+          activeList.cards.forEach(cardId => {
+            const listCard = allCards.find(ac => ac.id === cardId);
+            if (listCard) listTotalVal += (listCard.value || 0);
+          });
+          currentListInfo = {
+            listId: listId,
+            listName: activeList.name,
+            listTotal: listTotalVal,
+            cardValue: c.value || 0
+          };
+        } else {
+          currentListInfo = null;
+        }
+      } else {
+        currentListInfo = null;
+      }
 
       currentMathCard = { player: c.player, year: c.year, set: c.set, number: c.number, condition: c.condition };
 
@@ -832,6 +870,7 @@
       const pctEl = document.getElementById('calc-pct');
       const guideContainer = document.getElementById('counter-guide');
       const counterList = document.getElementById('counter-list');
+      const projectionPanel = document.getElementById('list-projection-panel');
 
       if (comp > 0 && offer > 0) {
         const pctVal = (offer / comp) * 100;
@@ -858,11 +897,29 @@
         }
         counterList.innerHTML = counterHtml;
         guideContainer.style.display = 'block';
-
       } else {
         pctEl.innerText = '--';
         pctEl.style.color = 'var(--primary)';
         guideContainer.style.display = 'none';
+      }
+
+      // Update List Projection if active
+      if (currentListInfo) {
+        projectionPanel.style.display = 'block';
+        document.getElementById('lp-name').innerText = currentListInfo.listName;
+        document.getElementById('lp-orig').innerText = formatMoney(currentListInfo.listTotal);
+
+        const projectedTotal = currentListInfo.listTotal - currentListInfo.cardValue + offer;
+        const lpProj = document.getElementById('lp-proj');
+        lpProj.innerText = formatMoney(projectedTotal);
+
+        if (projectedTotal >= currentListInfo.listTotal) {
+           lpProj.style.color = 'var(--success)';
+        } else {
+           lpProj.style.color = 'var(--danger)';
+        }
+      } else {
+        projectionPanel.style.display = 'none';
       }
     }
 
@@ -901,9 +958,16 @@
 
       const store = getStore('sellList', 'readwrite');
       if (editingSellId) {
+        // preserve the existing list association if we are editing an old item
+        const existingItem = sellCards.find(c => c.id === editingSellId);
         item.id = editingSellId;
+        item.showId = existingItem ? existingItem.showId : null;
+        item.showName = existingItem ? existingItem.showName : "";
         store.put(item);
       } else {
+        // associate with current list if coming from a show list
+        item.showId = currentListInfo ? currentListInfo.listId : null;
+        item.showName = currentListInfo ? currentListInfo.listName : "";
         store.add(item);
       }
 
@@ -916,7 +980,9 @@
         clearMiniComps();
         currentMathCard = { player: "", year: "", set: "", number: "", condition: "" };
         editingSellId = null;
+        currentListInfo = null;
         document.getElementById('math-save-btn').innerText = "Add to Sold List";
+
         switchTab('sell');
       };
     }
@@ -925,6 +991,16 @@
       const req = getStore('sellList', 'readonly').getAll();
       req.onsuccess = () => {
         sellCards = req.result;
+
+        // Populate the Show filter dropdown dynamically
+        const prevShow = document.getElementById('s-show').value;
+        const uniqueShows = [...new Set(sellCards.map(c => c.showName).filter(Boolean))].sort();
+        let showOptions = '<option value="ALL">All Shows / No Show</option>';
+        uniqueShows.forEach(s => {
+          showOptions += `<option value="${s}" ${s === prevShow ? 'selected' : ''}>${s}</option>`;
+        });
+        document.getElementById('s-show').innerHTML = showOptions;
+
         renderSellListUI();
       };
     }
@@ -932,6 +1008,7 @@
     function renderSellListUI() {
       const fSearch = document.getElementById('s-search').value.toLowerCase().trim();
       const fYear = document.getElementById('s-year').value.toLowerCase().trim();
+      const fShow = document.getElementById('s-show').value;
       const fSort = document.getElementById('s-sort').value;
       const searchTerms = fSearch.split(/\s+/).filter(term => term.length > 0);
 
@@ -939,7 +1016,8 @@
         const searchString = `${c.player} ${c.set} ${c.year} ${c.customDesc}`.toLowerCase();
         const matchesSearch = searchTerms.every(term => searchString.includes(term));
         const matchesYear = !fYear || c.year.toLowerCase().includes(fYear);
-        return matchesSearch && matchesYear;
+        const matchesShow = fShow === 'ALL' || c.showName === fShow;
+        return matchesSearch && matchesYear && matchesShow;
       });
 
       filtered.sort((a, b) => {
@@ -967,6 +1045,7 @@
           <div class="card">
             <div class="card-title">${item.player}</div>
             <div class="card-meta">${item.year} ${item.set} ${item.number ? '#'+item.number : ''} <br/> <strong>${item.condition}</strong></div>
+            ${item.showName ? `<div style="font-size: 11px; display: inline-block; background: var(--surface-alt); padding: 2px 6px; border-radius: 4px; margin-top: 0px; margin-bottom: 8px; border: 1px solid var(--border); color: var(--text-muted);">${item.showName}</div>` : ''}
             <div class="card-row">
               <div>
                 <div style="font-size:12px; color:var(--text-muted);">Sold For</div>
@@ -1016,6 +1095,10 @@
       inputOffer.dispatchEvent(new Event('input'));
 
       clearMiniComps();
+      // Ensure the projection panel hides since we aren't pulling from a live list
+      currentListInfo = null;
+      document.getElementById('list-projection-panel').style.display = 'none';
+
       document.getElementById('math-save-btn').innerText = "Update Sold List";
       switchTab('calc');
       window.scrollTo(0,0);
@@ -1050,7 +1133,6 @@
     attachClearButtons();
     initDB().then(() => {
       loadDatabaseView();
-      // Load userLists array into memory silently
       getStore('userLists', 'readonly').getAll().onsuccess = (e) => userLists = e.target.result || [];
     });
 
